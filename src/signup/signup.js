@@ -157,14 +157,21 @@ class Signup {
       // const isRadiologist2 = $('#radiologist-no').val();
       let yearsOfExperience;
       let speciality;
+      let anatomyChoices = [];
+
       if(isRadiologist){
         yearsOfExperience = $('#signup-years-of-experience option:selected').val();
       }else{
         speciality = $('#signup-speciality option:selected').val();
       }
 
+      $("#anatomy-choices input:checkbox[name=anatomy-choice]:checked").each(function(){
+        anatomyChoices.push($(this).val());
+      });
+
       const email = $('#signup-email').val();
       console.log('email:', email);
+      console.log('input:', $("#anatomy-choices input:checkbox[name=anatomy-choice]:checked"));
 
       // if(isRadiologist && isNaN(yearsOfExperience)){
       //     $('.signup-wrapper .error').removeClass('invisible');
@@ -200,6 +207,7 @@ class Signup {
         username,
         // password,
         isRadiologist,
+        anatomyChoices
       }
       window.localStorage.setItem('username', username);
 
@@ -214,6 +222,10 @@ class Signup {
       if(email){
         data.email = email;
       }
+
+      $("input:checkbox[name=type]:checked").each(function(){
+      yourArray.push($(this).val());
+      });
 
       console.log('data:', data);
       annotatorsDB.put(data).then(() => {

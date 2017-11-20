@@ -160,12 +160,24 @@ export default {
     let measurementsPerSeries = {};
     let annotatorMeasuredSeries = {};
     let seriesUIDs = [];
+    let anatomyMapping = new Map();
+
+    // This mapping should also be set globally
+    anatomyMapping.set('Liver', 'LIHC')
+    // etc...
 
     // first, get list of all series (this should be factored out to be global and only queried once)
     return chronicleDB.query('instances/context', {
       reduce: true,
       group: true,
       group_level: 3,
+    }).then(function (result) {
+
+    // Subset these IDs by annotators organ preferences...
+      result.rows.forEach(row => {
+      
+      });
+
     }).then(function (result) {
 
       result.rows.forEach(row => {
