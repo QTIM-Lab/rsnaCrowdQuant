@@ -44,6 +44,7 @@ https://github.com/pieper/Chronicle/blob/master/design/views.py
 - pinch zoom on mobile?
 - add progress sort on download -Steve
 - measurement disappears under certain window - maybe make measurement a different color/line width
+- what happens when user has finished all cases?
 
 #### after RSNA??
 - investigate how "U" showed up a annotator in DB ?
