@@ -67,3 +67,5 @@ https://github.com/pieper/Chronicle/blob/master/design/views.py
 - (bug) logging in as existing user starts with series index 0 again (already measured cases) - Steve to provide query function to suggest next case that is least reviewed and not already reviewed by this user
 - investigate 2 finger scrolling for mobile - Rob
 - skip case does not work
+- log skipped cases
+- annotator is hardcoded -fix that
