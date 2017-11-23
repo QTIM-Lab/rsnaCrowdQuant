@@ -157,11 +157,18 @@ class Signup {
       // const isRadiologist2 = $('#radiologist-no').val();
       let yearsOfExperience;
       let speciality;
+      let anatomyChoices = [];
+      let createDate = Date.now();
+
       if(isRadiologist){
         yearsOfExperience = $('#signup-years-of-experience option:selected').val();
       }else{
         speciality = $('#signup-speciality option:selected').val();
       }
+
+      $("#anatomy-choices input:checkbox[name=anatomy-choice]:checked").each(function(){
+          anatomyChoices.push($(this).val());
+      });
 
       const email = $('#signup-email').val();
       console.log('email:', email);
@@ -198,8 +205,10 @@ class Signup {
       const data = {
         _id: username,
         username,
+        createDate,
         // password,
         isRadiologist,
+        anatomyChoices
       }
       window.localStorage.setItem('username', username);
 
@@ -213,6 +222,10 @@ class Signup {
 
       if(email){
         data.email = email;
+      }
+
+      if (anatomyChoices && anatomyChoices.length > 0) {
+        data.anatomyChoices = anatomyChoices;
       }
 
       console.log('data:', data);
