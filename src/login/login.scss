@@ -11,6 +11,7 @@ $tablet-font-size: rem(30);
     padding: rem(15);
     border-radius: rem(5);
     margin: auto;
+    font-size: 24px;
 
     @media only screen and (min-device-width : $tablet-size-min) and (max-device-width : $tablet-size-max) {
       font-size: $tablet-font-size;
@@ -30,6 +31,7 @@ $tablet-font-size: rem(30);
       margin: 0.5rem 0 0.5rem 0;
       color: #9ccef9;
       text-align: center;
+      padding-top: 20px;
     }
 
     form {
@@ -50,7 +52,7 @@ $tablet-font-size: rem(30);
         }
       }
     }
-    
+
     button.submit {
       float: right;
       width: 100%;

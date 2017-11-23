@@ -14,7 +14,8 @@ button.submit {
   background-color: black;
   border: 1px solid #00a4d9;
   border-radius: 5px;
-  color: #9ccef9; }
+  color: #9ccef9;
+  font-size: 16px; }
 
 .loading-overlay {
   position: absolute;
@@ -48,7 +49,8 @@ button.submit {
     border: #00a4d9 solid 0.07143rem;
     padding: 1.07143rem;
     border-radius: 0.35714rem;
-    margin: auto; }
+    margin: auto;
+    font-size: 24px; }
     @media only screen and (min-device-width: 768px) and (max-device-width: 1024px) {
       .login-wrapper .login-box {
         font-size: 2.14286rem; } }
@@ -61,7 +63,8 @@ button.submit {
     .login-wrapper .login-box .signup-divider {
       margin: 0.5rem 0 0.5rem 0;
       color: #9ccef9;
-      text-align: center; }
+      text-align: center;
+      padding-top: 20px; }
     .login-wrapper .login-box form .form-input {
       display: flex;
       justify-content: space-between;
