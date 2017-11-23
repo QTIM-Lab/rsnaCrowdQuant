@@ -103,7 +103,9 @@ button.submit {
     border: #00a4d9 solid 0.07143rem;
     padding: 1.07143rem;
     border-radius: 0.35714rem;
-    margin: auto; }
+    margin: auto;
+    font-size: 24px;
+    width: 50%; }
     .signup-wrapper form .form-input {
       display: flex;
       justify-content: space-between;
