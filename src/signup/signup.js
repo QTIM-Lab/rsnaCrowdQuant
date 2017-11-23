@@ -158,6 +158,7 @@ class Signup {
       let yearsOfExperience;
       let speciality;
       let anatomyChoices = [];
+      let createDate = Date.now();
 
       if(isRadiologist){
         yearsOfExperience = $('#signup-years-of-experience option:selected').val();
@@ -204,6 +205,7 @@ class Signup {
       const data = {
         _id: username,
         username,
+        createDate,
         // password,
         isRadiologist,
         anatomyChoices
