@@ -47,8 +47,8 @@ export default {
           'TCGA_OV' : 'Ovarian'
       };
 
-      userCases = allCases.filter(curCase => {
-        var catLabel = categoryIdToLabelMap[curCase.key[1]];
+      userCases = allCases.filter(c => {
+        var catLabel = categoryIdToLabelMap[c.key[1]];
         return anatomyChoices.indexOf(catLabel) !== -1;
       });
 
@@ -131,17 +131,9 @@ export default {
 
   getNextSeriesForAnnotator(annotatorID, cases) {
 
-    // filter cases by annotator's anatomyChoices
-
-
     let measurementsPerSeries = {};
     let annotatorMeasuredSeries = {};
     let seriesUIDs = cases.map(c => { return c.key[0] });
-
-    // first, get list of all series (this should be factored out to be global and only queried once)
-    // result.rows.forEach(row => {
-    //   seriesUIDs.push(row.key[2][2]);
-    // });
 
     // then get the list of all measurements per series and how many measurements
     // (not all series will have been measured)
@@ -163,6 +155,19 @@ export default {
       })
     }).then(function (result) {
 
+      let measuredCases = result.rows.map(r => r.doc.seriesUID);
+
+      // if the user has more cases to measure in the current case category
+      // then filter the cases to only that category
+      let curCat = Login.currentCaseCategory;
+      if (curCat) {
+        let casesOfCat = cases.filter(c => c.key[1] === curCat);
+        if (!casesOfCat.some(c => c.key[0] in measuredCases)){
+          cases = cases.filter(c => c.key[1] === curCat);
+          seriesUIDs = cases.map(c => { c.key[0] });
+        }
+      }
+
       result.rows.forEach(row => {
         annotatorMeasuredSeries[row.doc.seriesUID] = true;
       });
@@ -178,8 +183,10 @@ export default {
       for (let seriesIndex = 0; seriesIndex < seriesUIDs.length; seriesIndex++) {
         let seriesUID = seriesUIDs[seriesIndex];
         if ( ! (seriesUID in measurementsPerSeries) ) {
-          caseDetails = (cases.find(c => c.key[0] === seriesUID).key);
-          console.log('Next Case Category:', caseDetails);
+          let foundCase = cases.find(c => c.key[0] === seriesUID);
+          caseDetails = foundCase.key;
+          console.log('Next Case Details:', caseDetails);
+          Login.currentCaseCategory = caseDetails[1];
           $('#patient-id-upper-right').text(caseDetails[2]);
           return seriesUID;
 
@@ -191,7 +198,8 @@ export default {
         }
       }
       caseDetails = (cases.find(c => c.key[0] === leastMeasured.seriesUID).key);
-      console.log('Next Case Category:', caseDetails);
+      console.log('Next Case Details:', caseDetails);
+      Login.currentCaseCategory = caseDetails[1];
       $('#patient-id-upper-right').text(caseDetails[2]);
       return leastMeasured.seriesUID;
     })
