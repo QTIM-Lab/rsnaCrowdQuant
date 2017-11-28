@@ -1,4 +1,5 @@
 import Menu from '../menu/menu.js';
+import FlagModal from '../flagModal/modal.js';
 import Viewer from '../viewer/viewer.js';
 import ErrorModal from '../errorModal/modal.js';
 import {measurementsDB, getUUID} from '../db/db.js';
@@ -42,6 +43,7 @@ function dataURItoBlob(dataURI) {
 export default {
   isMenuOpened: false,
   commandSelector: '.viewer-tools',
+  flagComment: undefined,
   $overlay: $('.loading-overlay'),
   $loadingText: $('.loading-overlay .content .submit-text'),
   $commandMenu: $('.commands-wrapper'),
@@ -52,6 +54,10 @@ export default {
 
     // Reset the viewport parameters (i.e. VOI LUT, scale, translation)
     cornerstone.reset(this.element);
+  },
+
+  flag: function() {
+    FlagModal.show(this.flagComment);
   },
 
   skip: function() {
@@ -76,6 +82,7 @@ export default {
     });
 
     Viewer.getNextCase().then(() => {
+      this.flagComment = undefined;
       this.$overlay.removeClass('loading').addClass('invisible');
     });
   },
@@ -189,6 +196,11 @@ export default {
           'userAgent': navigator.userAgent
         };
 
+        if (this.flagComment) {
+          doc.flagged = true;
+          doc.flagReason = this.flagComment;
+        }
+
         return measurementsDB.put(doc);
       }).then((response) => {
         console.timeEnd('PUT to Measurement DB');
@@ -207,6 +219,7 @@ export default {
     Viewer.getNextCase().then(() => {
       this.$loadingText.text('');
       this.$overlay.removeClass('loading').addClass('invisible');
+      this.flagComment = undefined;
     });
 
     return savingPromise;
@@ -239,6 +252,10 @@ export default {
       if (this.isMenuOpened) {
         this.toggleMoreMenu();
       }
+    });
+
+    FlagModal.init((comment) => {
+      this.flagComment = comment;
     });
   }
 };

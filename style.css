@@ -34,11 +34,8 @@ button.submit {
   .loading-overlay .content {
     margin: auto;
     flex: 1 0 auto; }
-    .loading-overlay .content .spinner {
-      width: rem(83); }
-  .loading-overlay.loading .content .spinner {
-    display: block;
-    margin: auto; }
+    .loading-overlay .content .spin {
+      display: none; }
   .loading-overlay.loading .content .spin {
     animation: rotate 1.2s linear infinite;
     display: block;
@@ -243,15 +240,15 @@ button.submit {
         text-align: -webkit-center;
         cursor: pointer;
         padding: 0.35714rem; }
-        .viewer-wrapper .top-bar .viewer-tools .tool.save, .viewer-wrapper .top-bar .viewer-tools .tool.skip, .viewer-wrapper .top-bar .viewer-tools .tool.clearAll, .viewer-wrapper .top-bar .viewer-tools .tool.stackScroll, .viewer-wrapper .top-bar .viewer-tools .tool.wlPreset, .viewer-wrapper .top-bar .viewer-tools .tool.logout {
+        .viewer-wrapper .top-bar .viewer-tools .tool.save, .viewer-wrapper .top-bar .viewer-tools .tool.skip, .viewer-wrapper .top-bar .viewer-tools .tool.clearAll, .viewer-wrapper .top-bar .viewer-tools .tool.stackScroll, .viewer-wrapper .top-bar .viewer-tools .tool.wlPreset, .viewer-wrapper .top-bar .viewer-tools .tool.logout, .viewer-wrapper .top-bar .viewer-tools .tool.flag {
           display: none; }
-        .viewer-wrapper .top-bar .viewer-tools .tool.save, .viewer-wrapper .top-bar .viewer-tools .tool.skip, .viewer-wrapper .top-bar .viewer-tools .tool.logout, .viewer-wrapper .top-bar .viewer-tools .tool.more {
+        .viewer-wrapper .top-bar .viewer-tools .tool.save, .viewer-wrapper .top-bar .viewer-tools .tool.skip, .viewer-wrapper .top-bar .viewer-tools .tool.logout, .viewer-wrapper .top-bar .viewer-tools .tool.more, .viewer-wrapper .top-bar .viewer-tools .tool.flag {
           float: right;
           margin: 0 0.35714rem; }
         @media (min-width: 930px) {
           .viewer-wrapper .top-bar .viewer-tools .tool.more {
             display: none; }
-          .viewer-wrapper .top-bar .viewer-tools .tool.save, .viewer-wrapper .top-bar .viewer-tools .tool.skip, .viewer-wrapper .top-bar .viewer-tools .tool.clearAll, .viewer-wrapper .top-bar .viewer-tools .tool.stackScroll, .viewer-wrapper .top-bar .viewer-tools .tool.wlPreset, .viewer-wrapper .top-bar .viewer-tools .tool.logout {
+          .viewer-wrapper .top-bar .viewer-tools .tool.save, .viewer-wrapper .top-bar .viewer-tools .tool.skip, .viewer-wrapper .top-bar .viewer-tools .tool.clearAll, .viewer-wrapper .top-bar .viewer-tools .tool.stackScroll, .viewer-wrapper .top-bar .viewer-tools .tool.wlPreset, .viewer-wrapper .top-bar .viewer-tools .tool.logout, .viewer-wrapper .top-bar .viewer-tools .tool.flag {
             display: inline-block; } }
         .viewer-wrapper .top-bar .viewer-tools .tool.active:hover a {
           color: #20a5d6; }
@@ -438,6 +435,16 @@ button.submit {
       margin-right: 1.42857rem; }
     .error-modal .button-holder .next-case {
       margin-left: 1.42857rem; }
+
+.flag-modal {
+  left: calc(50% - 186px); }
+  .flag-modal .input-holder textarea {
+    width: 100%;
+    height: 4.28571rem; }
+  .flag-modal .input-holder .count-down {
+    text-align: right;
+    margin-bottom: 10px;
+    font-size: 0.92857rem; }
 
 .menu-wrapper {
   position: absolute;

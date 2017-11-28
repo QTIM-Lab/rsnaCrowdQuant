@@ -1,0 +1,16 @@
+.flag-modal {
+  left: calc(50% - 186px);
+
+  .input-holder {
+    textarea {
+      width: 100%;
+      height: rem(60);
+    }
+
+    .count-down {
+      text-align: right;
+      margin-bottom: 10px;
+      font-size: rem(13);
+    }
+  }
+}

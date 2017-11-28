@@ -288,6 +288,12 @@
               </svg>
               <a>Skip Case</a>
             </div>
+            <div class="tool" data-command="flag">
+              <svg>
+                <use xlink:href="./imgs/icons.svg#icon-flag" href="./imgs/icons.svg#icon-flag"></use>
+              </svg>
+              <a>Flag Case</a>
+            </div>
             <div class="tool" data-command="logout">
               <svg>
                 <use xlink:href="./imgs/icons.svg#icon-status-complete" href="./imgs/icons.svg#icon-status-complete"></use>
@@ -334,6 +340,12 @@
             </svg>
             <a>Skip Case</a>
           </div>
+          <div class="tool flag right" data-command="flag">
+            <svg>
+              <use xlink:href="./imgs/icons.svg#icon-flag" href="./imgs/icons.svg#icon-flag"></use>
+            </svg>
+            <a>Flag Case</a>
+          </div>
           <div class="tool save right" data-command="save">
             <svg>
               <use xlink:href="./imgs/icons.svg#icon-status-complete" href="./imgs/icons.svg#icon-status-complete"></use>
@@ -378,6 +390,21 @@
       <div class="button-holder">
         <button class="logout">Log out</button>
         <button class="next-case">Next Case</button>
+      </div>
+    </div>
+
+    <div class="modal flag-modal">
+      <p>Please, tell us what is the issue with this image:</p>
+      <div class="input-holder">
+        <textarea maxlength="200"></textarea>
+        <div class="count-down">
+          <span class="characters-left">200</span>
+          <span class="label">/200</span>
+        </div>
+      </div>
+      <div class="button-holder">
+        <button class="logout">cancel</button>
+        <button class="next-case">flag</button>
       </div>
     </div>
 

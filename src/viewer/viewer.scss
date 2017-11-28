@@ -43,11 +43,11 @@ $max-screen-size-for-more-option: 930px;
         cursor: pointer;
         padding: rem(5);
 
-        &.save, &.skip, &.clearAll, &.stackScroll, &.wlPreset, &.logout {
+        &.save, &.skip, &.clearAll, &.stackScroll, &.wlPreset, &.logout, &.flag {
           display: none;
         }
 
-        &.save, &.skip, &.logout, &.more {
+        &.save, &.skip, &.logout, &.more, &.flag {
           float: right;
           margin: 0 rem(5);
         }
@@ -57,7 +57,7 @@ $max-screen-size-for-more-option: 930px;
             display: none;
           }
 
-          &.save, &.skip, &.clearAll, &.stackScroll, &.wlPreset, &.logout {
+          &.save, &.skip, &.clearAll, &.stackScroll, &.wlPreset, &.logout, &.flag {
             display: inline-block;
           }
         }

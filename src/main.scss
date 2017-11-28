@@ -51,18 +51,13 @@ button.submit {
     margin: auto;
     flex: 1 0 auto;
 
-    .spinner {
-      width: rem(83);
+    .spin {
+      display: none;
     }
   }
 
   &.loading {
     .content {
-      .spinner {
-        display: block;
-        margin: auto;
-      }
-
       .spin {
         animation: rotate 1.2s linear infinite;
         display: block;
@@ -96,4 +91,5 @@ button.submit {
 @import './viewer/viewer';
 @import './modal/modal';
 @import './errorModal/modal';
+@import './flagModal/modal';
 @import './menu/menu';
