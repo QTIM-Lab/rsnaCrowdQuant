@@ -339,11 +339,10 @@ function populateAnnotationsPerAnnotator(annoToCatToCt) {
         .rangeRound([height, 0]);
 
     var z = d3.scaleOrdinal()
-        .range(["#ffffb2", "#fecc5c", "#fd8d3c", "#f03b20", "#bd0026"]);
+        .range(["#fecc5c", "#fd8d3c", "#f03b20", "#bd0026"]);
 
     var data = Object.keys(annoToCatToCt).map(function (a) { return annoToCatToCt[a]; });
 
-    data = data.filter(d => d.total > 0);
     data.sort(function(a, b) { return b.total - a.total; });
 
     x.domain(data.map(d => d.annotator));
@@ -370,10 +369,11 @@ function populateAnnotationsPerAnnotator(annoToCatToCt) {
                 .on("mouseover", function() { tooltip.style("display", null); })
                 .on("mouseout", function() { tooltip.style("display", "none"); })
                 .on("mousemove", function(d) {
-                    var xPosition = d3.mouse(this)[0];
-                    var yPosition = d3.mouse(this)[1];
+                    var xPosition = d3.mouse(this)[0] + margin.left/2;
+                    var yPosition = d3.mouse(this)[1] + margin.top/2;
                     tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
-                    tooltip.select("text").text(d.data.annotator);
+                    tooltip.select("text")
+                        .text(d.data.annotator + '(' + d.data.total + ')');
                 });
 
         var tooltip = svg.append("g")
