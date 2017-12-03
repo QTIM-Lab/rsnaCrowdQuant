@@ -48,11 +48,13 @@ document.addEventListener("DOMContentLoaded", function(e) {
         measByAnno.sort(function(a, b) { return b.value - a.value; });
         measBySeries.sort(function(a, b) { return b.value - a.value; });
 
+        // buildSeriesToCatMap
         var seriesToCat = seriesInfo.reduce(function(a, c) {
             a[c.key[0]] = c.key[1];
             return a;
         }, {});
 
+        // buildAnnotatorToAnnotationsMap
         let annotatorToAnnotations = {};
         allMeas.forEach(function (m) {
             if (!annotatorToAnnotations[m.doc.annotator]) {
@@ -62,14 +64,116 @@ document.addEventListener("DOMContentLoaded", function(e) {
             annotatorToAnnotations[m.doc.annotator].push(m.doc);
         })
 
-        populateLeaderBoard(measByAnno, annotatorToAnnotations, seriesToCat);
-        populateAnnotationPerCategory(measBySeries, seriesToCat);
-        populateHistogram(measBySeries);
+        let annoToCatToCt = buildAnnoToCatToCtMap(annotatorToAnnotations, seriesToCat);
 
+        // buildSeriesToTimesMap
+        let seriesToTimes = buildSeriesToTimesMap(annotatorToAnnotations);
+
+        populateLeaderBoard(measByAnno, annoToCatToCt);
+        populateAnnoTimesHistogram(seriesToTimes);
+        populateAnnotationPerCategory(measBySeries, seriesToCat);
+        populateAnnotationsBySeries(measBySeries);
     });
 
 });
 
+function buildSeriesToTimesMap(annotatorToAnnotations) {
+    let ret = {};
+    let annotatorTimes = {};
+    let a2a = annotatorToAnnotations;
+
+    let annotators = Object.keys(a2a);
+    annotators.forEach(a => a2a[a].sort((a,b) => a.date - b.date));
+    annotators.forEach(a => {
+        ants = a2a[a];
+        annotatorTimes[a] = ants.map( (c, i, ants) => ({
+            time: (i > 0 ? c.date - ants[i-1].date : 0),
+            seriesUID: c.seriesUID
+        }) );
+    });
+
+    annotators.forEach(a => {
+        let ats = annotatorTimes[a];
+
+        ats.forEach( at => {
+            if (!ret[at.seriesUID]) {
+                ret[at.seriesUID] = [];
+            }
+
+            // filter noise:
+            // any annotation less than 5 seconds or greater than 300 seconds
+            // does not count
+            if (at.time > 5 && at.time < 300) {
+                ret[at.seriesUID].push(at.time);
+            }
+        });
+    });
+
+    return ret;
+}
+
+function populateAnnoTimesHistogram(seriesToTimes) {
+
+    let data = []; // just values
+    let seriesUIDs = Object.keys(seriesToTimes);
+
+    seriesUIDs.forEach(sid => {
+        let times = seriesToTimes[sid];
+        data = data.concat(times);
+    });
+
+    var formatCount = d3.format(",.0f");
+
+    var svg = d3.select("#anno-times-chart"),
+        margin = {top: 60, right: 30, bottom: 30, left: 30},
+        width = +svg.attr("width") - margin.left - margin.right,
+        height = +svg.attr("height") - margin.top - margin.bottom,
+        g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    svg.append('text')
+        .text('Time to Make Annotation (Histogram)')
+        .attr('x', margin.left)
+        .attr('y', margin.top/2);
+
+    var x = d3.scaleLinear()
+        .rangeRound([0, width])
+        .domain([0, d3.max(data)]);
+
+    var bins = d3.histogram()
+        .domain(x.domain())
+        .thresholds(x.ticks(30))
+        (data);
+
+    var y = d3.scaleLinear()
+        .domain([0, d3.max(bins, function(d) { return d.length; })])
+        .range([height, 0]);
+
+    var bar = g.selectAll(".bar")
+      .data(bins)
+      .enter().append("g")
+        .attr("class", "bar")
+        .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; });
+
+    bar.append("rect")
+        .attr("x", 1)
+        .attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)
+        .attr("height", function(d) { return height - y(d.length); });
+
+    bar.append("text")
+        .attr("dy", "-.75em")
+        .attr("y", 6)
+        .attr("x", (x(bins[0].x1) - x(bins[0].x0)) / 2)
+        .attr("text-anchor", "middle")
+        .style('font-size', '.75em')
+        .text(function(d) { return formatCount(d.length); });
+
+    g.append("g")
+        .attr("class", "axis axis--x")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x));
+
+
+}
 
 function populateAnnotationPerCategory(measBySeries, catBySeriesMap) {
 
@@ -129,11 +233,11 @@ function populateAnnotationPerCategory(measBySeries, catBySeriesMap) {
         .call(d3.axisLeft(y).tickSize(-width-20));
 }
 
-function populateHistogram(rows) {
+function populateAnnotationsBySeries(measBySeries) {
 
     var svg = d3.select('#annos-by-case-histogram');
 
-    var data = rows.map(function(d) { return d.value; });
+    var data = measBySeries.map(function(d) { return d.value; });
 
     var margin = {top: 20, right: 20, bottom: 30, left: 50},
         width = +svg.attr('width') - margin.left - margin.right,
@@ -178,20 +282,18 @@ function populateHistogram(rows) {
 }
 
 // redundant input data
-function populateLeaderBoard(measByAnno, annotatorToAnnotations, seriesToCat) {
+function populateLeaderBoard(measByAnno, annoToCatToCt) {
 
     d3.select('.leaderboard .annotator-count')
             .text(measByAnno.length);
 
     displayTopAnnotators(measByAnno, 20);
-
-    let annoToCatToCt = arrangeAnnoData(annotatorToAnnotations, seriesToCat);
     populateAnnotationsPerAnnotator(annoToCatToCt);
 }
 
 // simplify data to map of annotator to map of category id to count
 // { <annotator> : { <catId>: <int> }}
-function arrangeAnnoData(annotatorToAnnotations, seriesToCat) {
+function buildAnnoToCatToCtMap(annotatorToAnnotations, seriesToCat) {
     let ret = {};
     let annotators = Object.keys(annotatorToAnnotations);
 
@@ -217,13 +319,18 @@ function arrangeAnnoData(annotatorToAnnotations, seriesToCat) {
 
 function populateAnnotationsPerAnnotator(annoToCatToCt) {
     var svg = d3.select('#aba-chart'),
-        margin = {top: 20, right: 20, bottom: 30, left: 40},
+        margin = {top: 60, right: 20, bottom: 30, left: 40},
         width = +svg.attr("width") - margin.left - margin.right,
         height = +svg.attr("height") - margin.top - margin.bottom,
         g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+    svg.append('text')
+        .text('Annotations per Annotator')
+        .attr('x', margin.right)
+        .attr('y', margin.top /2);
+
     var x = d3.scaleBand()
-        .rangeRound([0, width+20])
+        .rangeRound([0, width+20]) // todo! bug, why is this 20 needed? I guess because the bars are too thin
         //.paddingInner(0.05)
         .align(0.1)
         ;
@@ -286,15 +393,15 @@ function populateAnnotationsPerAnnotator(annoToCatToCt) {
 
     g.append("g")
       .attr("class", "axis")
-      .call(d3.axisLeft(y).ticks(null, "s"))
-    .append("text")
-      .attr("x", 2)
-      .attr("y", y(y.ticks().pop()) + 0.5)
-      .attr("dy", "0.32em")
-      .attr("fill", "#000")
-      .attr("font-weight", "bold")
-      .attr("text-anchor", "start")
-      .text("Annotation Count");
+      .call(d3.axisLeft(y).ticks(null, "s"));
+    // .append("text")
+    //   .attr("x", 2)
+    //   .attr("y", y(y.ticks().pop()) + 0.5)
+    //   .attr("dy", "0.32em")
+    //   .attr("fill", "#000")
+    //   .attr("font-weight", "bold")
+    //   .attr("text-anchor", "start")
+    //   .text("Annotation Count");
 
   var legend = g.append("g")
       .attr("font-family", "sans-serif")
