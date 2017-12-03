@@ -223,9 +223,10 @@ function populateAnnotationsPerAnnotator(annoToCatToCt) {
         g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     var x = d3.scaleBand()
-        .rangeRound([0, width])
-        .paddingInner(0.05)
-        .align(0.1);
+        .rangeRound([0, width+20])
+        //.paddingInner(0.05)
+        .align(0.1)
+        ;
 
     var y = d3.scaleLinear()
         .rangeRound([height, 0]);
@@ -235,6 +236,7 @@ function populateAnnotationsPerAnnotator(annoToCatToCt) {
 
     var data = Object.keys(annoToCatToCt).map(function (a) { return annoToCatToCt[a]; });
 
+    data = data.filter(d => d.total > 0);
     data.sort(function(a, b) { return b.total - a.total; });
 
     x.domain(data.map(d => d.annotator));
@@ -257,8 +259,26 @@ function populateAnnotationsPerAnnotator(annoToCatToCt) {
                 .attr("x", function(d) { return x(d.data.annotator); })
                 .attr("y", function(d) { return y(d[1]); })
                 .attr("height", function(d) { return y(d[0]) - y(d[1]); })
-                .attr("width", x.bandwidth());
+                .attr("width", x.bandwidth())
+                .on("mouseover", function() { tooltip.style("display", null); })
+                .on("mouseout", function() { tooltip.style("display", "none"); })
+                .on("mousemove", function(d) {
+                    var xPosition = d3.mouse(this)[0];
+                    var yPosition = d3.mouse(this)[1];
+                    tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
+                    tooltip.select("text").text(d.data.annotator);
+                });
 
+        var tooltip = svg.append("g")
+          .attr("class", "tooltip")
+          .style("display", "none");
+
+        tooltip.append("text")
+          .attr("x", 15)
+          .attr("dy", "1.2em")
+          .style("text-anchor", "start")
+          .attr("font-size", "12px")
+          .attr("font-weight", "bold");
     // g.append("g")
     //   .attr("class", "axis")
     //   .attr("transform", "translate(0," + height + ")")
