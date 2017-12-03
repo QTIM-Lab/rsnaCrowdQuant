@@ -12,18 +12,24 @@
 
     <h1> RSNA Crowd Quant Dashboard </h1>
 
-    <div class='leaderboard'>
-        <h4 class='section-title'> Leader Board </h4>
-        <h6 class='annotator'> Number of Annotators: <span class='annotator-count'> 0 </span> </h6>
+    <div class='leaderboard section'>
+        <h3 class='section-title'> Leader Board </h3>
+        <div class='annotator-summary'>
+          <text>Annotators with at least one Measurement</text>
+          <text class='annotator-count'> 0 </text>
+        </div>
         <div class='top-annotators'></div>
+        <div class='annotations-by-annotator'>
+          <svg id='aba-chart' width=600 height=400></svg>
+        </div>
     </div>
 
-    <div class='case-cover'>
+    <div class='case-cover section'>
         <h4> Case Coverage by Classification </h4>
         <svg id='annos-by-category' width=600 height=400></svg>
     </div>
 
-    <div class='case-histogram'>
+    <div class='case-histogram section'>
         <h4 class='section-title'> Case Histogram (Number of Annotations per Case) </h4>
         <!-- <p> X axis is case id, sorted by annotation count. </p>
         <p> Y axis is number of annotations. </p> -->
