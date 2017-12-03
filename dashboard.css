@@ -18,10 +18,13 @@ body {
 }
 
 .annotator-summary {
-  width: 50%;
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 2em;
+    width: 50%;
+    margin-bottom: 2em;
+}
+
+.annotator-summary .row {
+    display: flex;
+    justify-content: space-between;
 }
 
 .annotator {
@@ -32,4 +35,17 @@ body {
 
 svg {
     border: 1px solid black;
+}
+
+#anno-times-chart .bar rect {
+    fill: forestgreen;
+}
+#annos-by-category .bar {
+    fill: navy;
+}
+#annos-by-case-histogram .bar {
+    fill: brown;
+}
+#skips-by-seriesuid .bar {
+    fill: steelblue;
 }

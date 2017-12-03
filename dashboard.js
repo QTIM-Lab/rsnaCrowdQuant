@@ -54,6 +54,30 @@ document.addEventListener("DOMContentLoaded", function(e) {
             return a;
         }, {});
 
+        // buildSeriesToAnnotationsMap - category of series added to measurement
+        let seriesToAnnotations = {};
+        allMeas.forEach(m => {
+            if (!seriesToAnnotations[m.doc.seriesUID]) {
+                seriesToAnnotations[m.doc.seriesUID] = [];
+            }
+            m.doc.category = seriesToCat[m.doc.seriesUID];
+            seriesToAnnotations[m.doc.seriesUID].push(m.doc);
+        });
+
+        let seriesUIDs = Object.keys(seriesToAnnotations);
+        let skipCts = []; // one to one with seriesUIDs
+
+        seriesUIDs.forEach(sid => {
+            let skipct = 0;
+            seriesToAnnotations[sid].forEach(an => {
+                if (an.skip) {
+                    skipct++;
+                }
+            });
+            skipCts.push(skipct);
+        })
+        let totalSkipCt = skipCts.reduce( (a, c) => a = a+c, 0 );
+
         // buildAnnotatorToAnnotationsMap
         let annotatorToAnnotations = {};
         allMeas.forEach(function (m) {
@@ -69,10 +93,12 @@ document.addEventListener("DOMContentLoaded", function(e) {
         // buildSeriesToTimesMap
         let seriesToTimes = buildSeriesToTimesMap(annotatorToAnnotations);
 
-        populateLeaderBoard(measByAnno, annoToCatToCt);
+        populateLeaderBoard(measByAnno, annoToCatToCt, allMeas.length, totalSkipCt);
         populateAnnoTimesHistogram(seriesToTimes);
         populateAnnotationPerCategory(measBySeries, seriesToCat);
         populateAnnotationsBySeries(measBySeries);
+
+        populateSkipsBySeries(seriesUIDs, skipCts); // includes skip info
     });
 
 });
@@ -171,8 +197,71 @@ function populateAnnoTimesHistogram(seriesToTimes) {
         .attr("class", "axis axis--x")
         .attr("transform", "translate(0," + height + ")")
         .call(d3.axisBottom(x));
+}
+
+function populateSkipsBySeries (seriesUIDs, skipCts) {
+
+    var svg = d3.select('#skips-by-seriesuid');
+    var margin = {top: 60, right: 20, bottom: 30, left: 50},
+        width = +svg.attr('width') - margin.left - margin.right,
+        height = +svg.attr('height') - margin.top - margin.bottom;
 
 
+    svg.append('text')
+        .text('Skips Per SeriesUID')
+        .attr('x', margin.left)
+        .attr('y', margin.top /2);
+
+    svg.append('text') // filled on hover of a bar
+        .attr('id', 'series-label')
+        .attr('x', width/2)
+        .attr('y', margin.top /2)
+        .attr('font-size', '.6em');
+
+    // set the ranges
+    var x = d3.scaleLinear()
+              .range([0, width]);
+              //.padding(0.1);
+
+    var y = d3.scaleLinear()
+              .range([height, 0]);
+
+    var svgg = svg.append("g")
+        .attr("transform",
+              "translate(" + margin.left + "," + margin.top + ")");
+
+    // Scale the range of the data in the domains
+    x.domain([0, skipCts.length]);
+    y.domain([0, d3.max(skipCts)]).nice();
+
+    // append the rectangles for the bar chart
+    svgg.selectAll(".bar")
+      .data(skipCts)
+    .enter().append("rect")
+      .attr("class", "bar")
+      .attr("x", function(d, i) { return x(i); })
+      .attr("width", 2)
+      .attr("y", function(d) { return y(d); })
+      .attr("height", function(d) { return height - y(d); })
+      .on('mouseover', function(d, i) {
+          svg.select('#series-label')
+            .text(seriesUIDs[i]);
+       })
+       .on('mouseout', function (d) {
+           svg.select('#series-label')
+             .text('');
+       })
+
+      // add the x Axis
+      var axisBuffer = 10;
+      svgg.append("g")
+          .attr("transform", "translate(0," + (height + axisBuffer) + ")")
+          .call(d3.axisBottom(x));
+
+      // add the y Axis
+      svgg.append("g")
+          .attr('transform', 'translate (' + (-axisBuffer) + ', 0)')
+          .call(d3.axisLeft(y));
 }
 
 function populateAnnotationPerCategory(measBySeries, catBySeriesMap) {
@@ -282,12 +371,13 @@ function populateAnnotationsBySeries(measBySeries) {
 }
 
 // redundant input data
-function populateLeaderBoard(measByAnno, annoToCatToCt) {
+function populateLeaderBoard(measByAnno, annoToCatToCt, totalAnnotations, totalSkips) {
 
-    d3.select('.leaderboard .annotator-count')
-            .text(measByAnno.length);
+    d3.select('.leaderboard .annotator-count').text(measByAnno.length);
+    d3.select('.leaderboard .annotation-count').text(totalAnnotations);
+    d3.select('.leaderboard .annotation-skip-count').text(totalSkips);
 
-    displayTopAnnotators(measByAnno, 20);
+    displayTopAnnotators(measByAnno, annoToCatToCt, 20);
     populateAnnotationsPerAnnotator(annoToCatToCt);
 }
 
@@ -303,7 +393,8 @@ function buildAnnoToCatToCtMap(annotatorToAnnotations, seriesToCat) {
         'TCGA-LUAD': 0,
         'TCGA_OV': 0,
         'TCGA_RN': 0,
-        'total': 0
+        'total': 0,
+        'skipped': 0
     });
 
     annotators.forEach(a => {
@@ -311,6 +402,9 @@ function buildAnnoToCatToCtMap(annotatorToAnnotations, seriesToCat) {
             let cat = seriesToCat[an.seriesUID];
             ret[a][cat]++;
             ret[a]['total']++;
+            if (an.skip) {
+                ret[a]['skipped']++;
+            }
         });
     });
 
@@ -373,7 +467,7 @@ function populateAnnotationsPerAnnotator(annoToCatToCt) {
                     var yPosition = d3.mouse(this)[1] + margin.top/2;
                     tooltip.attr("transform", "translate(" + xPosition + "," + yPosition + ")");
                     tooltip.select("text")
-                        .text(d.data.annotator + '(' + d.data.total + ')');
+                        .text(d.data.annotator + '(' + d.data.total + ', ' + d.data.skipped + ' skipped)');
                 });
 
         var tooltip = svg.append("g")
@@ -425,7 +519,7 @@ function populateAnnotationsPerAnnotator(annoToCatToCt) {
       .text(function(d) { return d; });
 }
 
-function displayTopAnnotators(rows, numToDisplay) {
+function displayTopAnnotators(rows, annoToCatToCt, numToDisplay) {
 
     var topAnnotators = d3.select('.top-annotators');
 
@@ -445,7 +539,7 @@ function displayTopAnnotators(rows, numToDisplay) {
     annotatorContainers
         .append('text')
         .text(function(d){
-            return d.value;
+            return d.value + ' (' + annoToCatToCt[d.key].skipped + ')';
         });
 }
 
