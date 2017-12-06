@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
         });
 
         let seriesUIDs = Object.keys(seriesToAnnotations);
-        let skipCts = []; // one to one with seriesUIDs
+        let skipCts = [];
 
         seriesUIDs.forEach(sid => {
             let skipct = 0;
@@ -74,9 +74,11 @@ document.addEventListener("DOMContentLoaded", function(e) {
                     skipct++;
                 }
             });
-            skipCts.push(skipct);
+            skipCts.push({seriesUID:sid, skipct:skipct});
         })
-        let totalSkipCt = skipCts.reduce( (a, c) => a = a+c, 0 );
+        skipCts.sort((a,b)=>b.skipct-a.skipct);
+
+        let totalSkipCt = skipCts.reduce( (a, c) => a = a+c.skipct, 0 );
 
         // buildAnnotatorToAnnotationsMap
         let annotatorToAnnotations = {};
@@ -232,7 +234,7 @@ function populateSkipsBySeries (seriesUIDs, skipCts) {
 
     // Scale the range of the data in the domains
     x.domain([0, skipCts.length]);
-    y.domain([0, d3.max(skipCts)]).nice();
+    y.domain([0, d3.max(skipCts,d=>d.skipct)]).nice();
 
     // append the rectangles for the bar chart
     svgg.selectAll(".bar")
@@ -241,8 +243,8 @@ function populateSkipsBySeries (seriesUIDs, skipCts) {
       .attr("class", "bar")
       .attr("x", function(d, i) { return x(i); })
       .attr("width", 2)
-      .attr("y", function(d) { return y(d); })
-      .attr("height", function(d) { return height - y(d); })
+      .attr("y", function(d) { return y(d.skipct); })
+      .attr("height", function(d) { return height - y(d.skipct); })
       .on('mouseover', function(d, i) {
           svg.select('#series-label')
             .text(seriesUIDs[i]);
