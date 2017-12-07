@@ -1,4 +1,4 @@
-$max-screen-size-for-more-option: 500px;
+$max-screen-size-for-more-option: 930px;
 
 .viewer-wrapper {
   display: flex;
@@ -14,12 +14,12 @@ $max-screen-size-for-more-option: 500px;
       .commands-wrapper {
         position: absolute;
         top: rem(77);
-        left: rem(17);
+        right: rem(17);
         height: 0;
         z-index: 9;
         padding: 0;
         background: rgba(20,25,30,0.95);
-        transition: height 1s;
+        transition: height 0.3s;
         overflow: auto;
         width: rem(331);
 
@@ -28,7 +28,7 @@ $max-screen-size-for-more-option: 500px;
         }
 
         &.open {
-          height: rem(75);
+          height: rem(200);
         }
 
         &.border {
@@ -43,8 +43,13 @@ $max-screen-size-for-more-option: 500px;
         cursor: pointer;
         padding: rem(5);
 
-        &.save, &.skip, &.clearAll, &.stackScroll {
+        &.save, &.skip, &.clearAll, &.stackScroll, &.wlPreset, &.logout {
           display: none;
+        }
+
+        &.save, &.skip, &.logout, &.more {
+          float: right;
+          margin: 0 rem(5);
         }
 
         @media (min-width: $max-screen-size-for-more-option) {
@@ -52,7 +57,7 @@ $max-screen-size-for-more-option: 500px;
             display: none;
           }
 
-          &.save, &.skip, &.clearAll, &.stackScroll {
+          &.save, &.skip, &.clearAll, &.stackScroll, &.wlPreset, &.logout {
             display: inline-block;
           }
         }

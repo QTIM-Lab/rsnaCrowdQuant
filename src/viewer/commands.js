@@ -4,6 +4,21 @@ import ErrorModal from '../errorModal/modal.js';
 import {measurementsDB, getUUID} from '../db/db.js';
 import Login from '../login/login';
 
+const defaultWlPresets = {
+    SoftTissue: {
+        wc: 40,
+        ww: 400
+    },
+    Lung: {
+        wc: -600,
+        ww: 1500
+    },
+    Liver: {
+        wc: 90,
+        ww: 150
+    }
+};
+
 // helper from https://stackoverflow.com/questions/12168909/blob-from-dataurl
 function dataURItoBlob(dataURI) {
   // convert base64 to raw binary data held in a string
@@ -66,8 +81,7 @@ export default {
   },
 
   setWL: function (windowWidth, windowCenter) {
-    const enabledElement = cornerstone.getEnabledElement(this.element);
-    const viewport = enabledElement.viewport;
+    const viewport = cornerstone.getViewport(this.element);
 
     viewport.voi.windowWidth = windowWidth;
     viewport.voi.windowCenter = windowCenter;
@@ -75,12 +89,21 @@ export default {
     cornerstone.updateImage(this.element);
   },
 
-  setLungWL: function() {
-    this.setWL(1600, -600);
+  setWLPreset: function(presetName) {
+    const preset = defaultWlPresets[presetName]
+    this.setWL(preset.ww, preset.wc);
   },
 
-  setLiverWL: function() {
-    this.setWL(150, 30);
+  setWLPresetLung: function() {
+    this.setWLPreset('Lung');
+  },
+
+  setWLPresetLiver: function() {
+    this.setWLPreset('Liver');
+  },
+
+  setWLPresetSoftTissue: function() {
+    this.setWLPreset('SoftTissue');
   },
 
   toggleMoreMenu: function () {
@@ -152,6 +175,11 @@ export default {
           'start_y': lengthMeasurement.handles.start.y,
           'end_x': lengthMeasurement.handles.end.x,
           'end_y': lengthMeasurement.handles.end.y,
+          'windowWidth': lengthMeasurement.windowWidth,
+          'windowCenter': lengthMeasurement.windowCenter,
+          'scale': lengthMeasurement.scale,
+          'translation_x': lengthMeasurement.translation.x,
+          'translation_y': lengthMeasurement.translation.y,
           'annotator': Login.username,
           'seriesUID': window.rsnaCrowdQuantSeriesUID,
           'instanceUID': window.rsnaCrowdQuantCaseStudy.instanceUIDs[measurement.imageIndex],
@@ -182,6 +210,10 @@ export default {
     });
 
     return savingPromise;
+  },
+
+  logout() {
+    Login.logout();
   },
 
   initCommands() {
