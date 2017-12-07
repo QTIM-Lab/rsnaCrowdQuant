@@ -3,11 +3,28 @@
 body {
   font-family: Helvetica, Arial, sans-serif;
   font-size: 1em;
+  margin: 4em;
+  width:1024px;
 }
 
+.section {
+  margin-top: 2em;
+  margin-bottom: 4em;
+}
 
 .top-annotators {
     margin-left: 50px;
+    margin-bottom:30px;
+}
+
+.annotator-summary {
+    width: 50%;
+    margin-bottom: 2em;
+}
+
+.annotator-summary .row {
+    display: flex;
+    justify-content: space-between;
 }
 
 .annotator {
@@ -18,4 +35,17 @@ body {
 
 svg {
     border: 1px solid black;
+}
+
+#anno-times-chart .bar rect {
+    fill: forestgreen;
+}
+#annos-by-category .bar {
+    fill: navy;
+}
+#annos-by-case-histogram .bar {
+    fill: brown;
+}
+#skips-by-seriesuid .bar {
+    fill: steelblue;
 }
