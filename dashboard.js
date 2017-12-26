@@ -57,6 +57,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
         // buildSeriesToAnnotationsMap - category of series added to measurement
         let seriesToAnnotations = {};
         allMeas.forEach(m => {
+
             if (!seriesToAnnotations[m.doc.seriesUID]) {
                 seriesToAnnotations[m.doc.seriesUID] = [];
             }
@@ -96,7 +97,7 @@ document.addEventListener("DOMContentLoaded", function(e) {
         populateLeaderBoard(measByAnno, annoToCatToCt, allMeas.length, totalSkipCt);
         populateAnnoTimesHistogram(seriesToTimes);
         populateAnnotationPerCategory(measBySeries, seriesToCat);
-        populateAnnotationsBySeries(measBySeries);
+        populateAnnotationsBySeries(measBySeries, seriesToAnnotations);
 
         populateSkipsBySeries(seriesUIDs, skipCts); // includes skip info
     });
@@ -201,11 +202,15 @@ function populateAnnoTimesHistogram(seriesToTimes) {
 
 function populateSkipsBySeries (seriesUIDs, skipCts) {
 
+    var data = seriesUIDs.map((sid, i) => [sid, skipCts[i]]);
+    data.sort((a,b) => b[1] - a[1]);
+    seriesUIDs = data.map(d => d[0]);
+    skipCts = data.map(d => d[1]);
+
     var svg = d3.select('#skips-by-seriesuid');
     var margin = {top: 60, right: 20, bottom: 30, left: 50},
         width = +svg.attr('width') - margin.left - margin.right,
         height = +svg.attr('height') - margin.top - margin.bottom;
-
 
     svg.append('text')
         .text('Skips Per SeriesUID')
@@ -322,11 +327,20 @@ function populateAnnotationPerCategory(measBySeries, catBySeriesMap) {
         .call(d3.axisLeft(y).tickSize(-width-20));
 }
 
-function populateAnnotationsBySeries(measBySeries) {
+function populateAnnotationsBySeries(measBySeries, seriesToAnnotations) {
 
     var svg = d3.select('#annos-by-case-histogram');
 
-    var data = measBySeries.map(function(d) { return d.value; });
+    // var data = measBySeries.map(function(d) { return d.value; });
+    var data = Object.keys(seriesToAnnotations).map(function(d) {
+        return seriesToAnnotations[d].reduce((acc, an) => {
+            if (!an.skip) {
+                acc++;
+            }
+            return acc;
+        }, 0);
+    });
+    data.sort((a,b) => b - a);
 
     var margin = {top: 20, right: 20, bottom: 30, left: 50},
         width = +svg.attr('width') - margin.left - margin.right,
@@ -367,7 +381,7 @@ function populateAnnotationsBySeries(measBySeries) {
       // // add the y Axis
       svgg.append("g")
           .attr('transform', 'translate (' + (-axisBuffer) + ', 0)')
-          .call(d3.axisLeft(y));
+          .call(d3.axisLeft(y).ticks(d3.max(data)));
 }
 
 // redundant input data
