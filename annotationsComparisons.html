@@ -70,6 +70,12 @@
 
     };
 
+
+    function showImageInPopup(img) {
+        let myWindow = window.open();
+        myWindow.document.write('<img src=' + img.src +'>');
+    }
+
     $(document).ready(function() {
       //const baseURL='http://rsnacrowdquant.cloudapp.net:5984';
       const baseURL='http://rsnacrowdquant2.eastus2.cloudapp.azure.com:5984';
@@ -243,7 +249,7 @@
                       <p>${annotatorID} for Series: ${row.doc.seriesUID}</p>
                       <p>Length: ${row.doc.length}</p>
       <!--                <a href='${measurementsURL}/${row.id}/screenshot.png' target='_blank'>screenshot</a> -->
-                      <img src='${measurementsURL}/${row.id}/screenshot.png' width=400  />
+                      <img src='${measurementsURL}/${row.id}/screenshot.png' width=400 onclick='showImageInPopup(this)' />
 
                     </div>
                   `);
