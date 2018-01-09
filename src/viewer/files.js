@@ -1,89 +1,58 @@
 import Connector from './connector';
+import Login from '../login/login';
 import {chronicleURL, chronicleDB, measurementsDB} from '../db/db';
 
 export default {
-  getFile(url) {
-    return new Promise(function (resolve, reject) {
-      const request = new XMLHttpRequest();
-
-      request.open('GET', url, true);
-      request.responseType = 'arraybuffer';
-
-      request.onload = function(oEvent) {
-        const arrayBuffer = request.response;
-        if (arrayBuffer) {
-          try {
-            resolve(new Blob([arrayBuffer], { type: 'application/dicom' }));
-          } catch (error) {
-            reject(error);
-          }
-        }
-      };
-
-      request.send(null);
-    });
-  },
-
   getCaseImages() {
     const $overlay = $('.loading-overlay');
     $overlay.addClass('loading');
     $overlay.removeClass('invisible');
 
-    // return new Promise((resolve, reject) => {
-
     return this.getChronicleImageIDs().then((caseStudy) => {
-      if (caseStudy && caseStudy.urls) {
-        // console.log('getCaseImages0');
-
-        // where to store the case id for access during save?
-        // I don't understand the model heirarchy, so let's stick it on the window
-        window.rsnaCrowdQuantSeriesUID = caseStudy.seriesUID;
-        window.rsnaCrowdQuantCaseStudy = caseStudy;
-
-        return Promise.all(caseStudy.urls.map(this.getFile)).then(function (files) {
-          // console.log('getCaseImages1');
-          $overlay.addClass('invisible');
-          $overlay.removeClass('loading');
-
-          return Promise.all(files.map(cornerstoneWADOImageLoader.wadouri.fileManager.add));
-        }).then((imageIds) => {
-          return imageIds;
-          // resolve(files.map(cornerstoneWADOImageLoader.wadouri.fileManager.add));
-        });
+      if (!caseStudy || !caseStudy.urls) {
+        throw new Error('No case study or no URLs provided');
       }
-    }).catch(function(err) {
-      throw err;
-    });
 
-      // Connector.getCase().then((caseStudy) => {
-      //   if (caseStudy && caseStudy.urls) {
-      //     Promise.all(caseStudy.urls.map(this.getFile)).then(function (files) {
-      //       $overlay.addClass('invisible');
-      //       $overlay.removeClass('loading');
-      //
-      //       resolve(files.map(cornerstoneWADOImageLoader.wadouri.fileManager.add));
-      //     }).catch(reject);
-      //   }
-      // }).catch(function(error) {
-      //   reject(error);
-      // });
-    // });
+      // where to store the case id for access during save?
+      // I don't understand the model hierarchy, so let's stick it on the window
+      window.rsnaCrowdQuantSeriesUID = caseStudy.seriesUID;
+      window.rsnaCrowdQuantCaseStudy = caseStudy;
+
+      return caseStudy.urls.map(url => url.replace('http', 'wadouri'));
+    });
   },
 
   currentSeriesIndex: undefined,
   seriesUID_A: undefined,
 
   getChronicleImageIDs () {
-    return chronicleDB.query("instances/context", {
+
+    var allCases; // this could be cached
+    var userCases; // filtered to user's anatChoices
+
+    return chronicleDB.query("instances/bySeriesUID_j", { // bySeriesUID_j or byCollection
       reduce : true,
-      stale : 'update_after',
-      // key: [["UnspecifiedInstitution", "TCGA-17-Z011"], ["UnspecifiedStudyDescription", "1.3.6.1.4.1.14519.5.2.1.7777.9002.242742387344636595876380532248"]],
-      // startkey : [['UnspecifiedInstitution', 'TCGA-17-Z011']], // only show the prostates - they basically work
-      // endkey: [['UnspecifiedInstitution', 'TCGA-17-Z013']],
-      group_level : 3,
-    }).then((data) => {
-      var annotatorID='dismal_caribou';
-      return this.getNextSeriesForAnnotator(annotatorID);
+      //stale : 'update_after',
+      group : true,
+    }).then((cases) => {
+      allCases = cases.rows;
+
+      const annotatorID = Login.username;
+      const anatomyChoices = Login.user.anatomyChoices;
+
+      var categoryIdToLabelMap = {
+          'TCGA-LUAD' : 'Lung',
+          'TCGA-LIHC' : 'Liver',
+          'TCGA_RN' : 'Renal',
+          'TCGA_OV' : 'Ovarian'
+      };
+
+      userCases = allCases.filter(curCase => {
+        var catLabel = categoryIdToLabelMap[curCase.key[1]];
+        return anatomyChoices.indexOf(catLabel) !== -1;
+      });
+
+      return this.getNextSeriesForAnnotator(annotatorID, userCases);
   }).then ((seriesUID) => {
 
       if(!this.currentSeriesIndex) {
@@ -101,6 +70,11 @@ export default {
       this.seriesUID_A = seriesUID;
       console.log('series UID:', seriesUID);
 
+      if (seriesUID === undefined) {
+        alert('Congratulations - you have looked at all the series');
+        window.location.reload();
+      }
+
       return chronicleDB.query("instances/seriesInstances", {
         startkey : seriesUID,
         endkey : seriesUID + '\u9999',
@@ -112,16 +86,18 @@ export default {
       const instanceUIDs = [];
       data.rows.forEach((row) => {
         const instanceUID = row.value[1];
-        // const instanceURL = `${chronicleURL}/${instanceUID}/object.dcm`;
-        // imageIDs.push(instanceURL);
         instanceUIDs.push(instanceUID);
       });
-      // console.log('instanceUIDs:', instanceUIDs);
 
+      console.time('Metadata Retrieval from Chronicle DB');
+      // TODO: Switch to some study or series-level call
+      // It is quite slow to wait on metadata for every single image
+      // each retrieved in separate calls
       return Promise.all(instanceUIDs.map((uid) => {
         return chronicleDB.get(uid);
       }));
     }).then((docs) => {
+      console.timeEnd('Metadata Retrieval from Chronicle DB');
       const instanceNumberTag = "00200013";
       let instanceUIDsByImageNumber = {};
       docs.forEach((doc) => {
@@ -130,9 +106,7 @@ export default {
       });
 
       const imageNumbers = Object.keys(instanceUIDsByImageNumber);
-      imageNumbers.sort((a, b) => {
-        return a - b;
-      });
+      imageNumbers.sort((a, b) => a - b);
 
       let instanceURLs = [];
       let instanceUIDs = [];
@@ -148,49 +122,54 @@ export default {
         seriesUID: this.seriesUID_A,
         currentSeriesIndex: this.currentSeriesIndex - 1,
         urls: instanceURLs,
-        instanceUIDs: instanceUIDs
+        instanceUIDs
       };
     }).catch((err) => {
       throw err;
     });
   },
 
-  getNextSeriesForAnnotator(annotatorID) {
+  getNextSeriesForAnnotator(annotatorID, cases) {
+
+    // filter cases by annotator's anatomyChoices
+
 
     let measurementsPerSeries = {};
     let annotatorMeasuredSeries = {};
-    let seriesUIDs = [];
+    let seriesUIDs = cases.map(c => { return c.key[0] });
 
     // first, get list of all series (this should be factored out to be global and only queried once)
-    return chronicleDB.query('instances/context', {
+    // result.rows.forEach(row => {
+    //   seriesUIDs.push(row.key[2][2]);
+    // });
+
+    // then get the list of all measurements per series and how many measurements
+    // (not all series will have been measured)
+    return measurementsDB.query('by/seriesUIDNoSkip', {
       reduce: true,
       group: true,
-      group_level: 3,
+      level: 'exact'
     }).then(function (result) {
 
       result.rows.forEach(row => {
-        seriesUIDs.push(row.key[2][2]);
+        measurementsPerSeries[row.key] = row.value;
       });
 
-      // then get the list of all measurements per series and how many measurements
-      // (not all series will have been measured)
-      return measurementsDB.query('by/seriesUID', {
-        reduce: true,
-        group: true,
-        level: 'exact',
+      return measurementsDB.query('by/annotators', {
+        reduce: false,
+        include_docs: true,
+        start_key: annotatorID,
+        end_key: annotatorID,
       })
     }).then(function (result) {
-        result.rows.forEach(row => {
-          measurementsPerSeries[row.key] = row.value;
-        });
 
-        return measurementsDB.query('by/annotators', {
-          reduce: false,
-          include_docs: true,
-          start_key: annotatorID,
-          end_key: annotatorID,
-        })
-    }).then(function (result) {
+      // todo- remove duplication! store on a utils object? or the Login?
+      let categoryIdToLabelMap = {
+          'TCGA-LUAD' : 'Lung',
+          'TCGA-LIHC' : 'Liver',
+          'TCGA_RN' : 'Renal',
+          'TCGA_OV' : 'Ovarian'
+      };
 
       result.rows.forEach(row => {
         annotatorMeasuredSeries[row.doc.seriesUID] = true;
@@ -202,9 +181,15 @@ export default {
       // - if the user already measured it, ignore it
       // - otherwise find the least measured one
       let leastMeasured = {seriesUID: undefined, measurementCount: Number.MAX_SAFE_INTEGER};
+      let caseDetails;
+
       for (let seriesIndex = 0; seriesIndex < seriesUIDs.length; seriesIndex++) {
         let seriesUID = seriesUIDs[seriesIndex];
         if ( ! (seriesUID in measurementsPerSeries) ) {
+          caseDetails = (cases.find(c => c.key[0] === seriesUID).key);
+          console.log('Next Case Category:', caseDetails);
+          $('#patient-id-upper-right').text(caseDetails[2]);
+          $('#category-upper-right').text(categoryIdToLabelMap[caseDetails[1]]);
           return seriesUID;
 
         }
@@ -214,6 +199,10 @@ export default {
           leastMeasured.measurementCount = measurementsPerSeries[seriesUID];
         }
       }
+      caseDetails = (cases.find(c => c.key[0] === leastMeasured.seriesUID).key);
+      console.log('Next Case Category:', caseDetails);
+      $('#patient-id-upper-right').text(caseDetails[2]);
+      $('#category-upper-right').text(categoryIdToLabelMap[caseDetails[1]]);
       return leastMeasured.seriesUID;
     })
   }
