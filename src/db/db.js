@@ -1,8 +1,8 @@
 // const baseUrl='http://127.0.0.1:5984';
 import PouchDB from 'pouchdb';
 
-//const baseURL='http://rsnacrowdquant.cloudapp.net:5984';
-const baseURL='http://rsnacrowdquant2.eastus2.cloudapp.azure.com:5984';
+const baseURL='http://rsnacrowdquant.cloudapp.net:5984';
+//const baseURL='http://rsnacrowdquant2.eastus2.cloudapp.azure.com:5984';
 
 export const uuidURL = `${baseURL}/_uuids`;
 export const annotatorsURL = `${baseURL}/annotators`;
