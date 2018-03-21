@@ -206,9 +206,9 @@ function populateAnnoTimesHistogram(seriesToTimes) {
 function populateSkipsBySeries (seriesUIDs, skipCts) {
 
     var data = seriesUIDs.map((sid, i) => [sid, skipCts[i]]);
-    data.sort((a,b) => b[1] - a[1]);
+    data.sort((a,b) => b[1].skipct - a[1].skipct);
     seriesUIDs = data.map(d => d[0]);
-    skipCts = data.map(d => d[1]);
+    skipCts = data.map(d => d[1].skipct);
 
     var svg = d3.select('#skips-by-seriesuid');
     var margin = {top: 60, right: 20, bottom: 30, left: 50},
@@ -240,7 +240,7 @@ function populateSkipsBySeries (seriesUIDs, skipCts) {
 
     // Scale the range of the data in the domains
     x.domain([0, skipCts.length]);
-    y.domain([0, d3.max(skipCts,d=>d.skipct)]).nice();
+    y.domain([0, d3.max(skipCts)]).nice();
 
     // append the rectangles for the bar chart
     svgg.selectAll(".bar")
@@ -249,8 +249,8 @@ function populateSkipsBySeries (seriesUIDs, skipCts) {
       .attr("class", "bar")
       .attr("x", function(d, i) { return x(i); })
       .attr("width", 2)
-      .attr("y", function(d) { return y(d.skipct); })
-      .attr("height", function(d) { return height - y(d.skipct); })
+      .attr("y", function(d) { return y(d); })
+      .attr("height", function(d) { return height - y(d); })
       .on('mouseover', function(d, i) {
           svg.select('#series-label')
             .text(seriesUIDs[i]);
