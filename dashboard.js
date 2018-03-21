@@ -2,6 +2,7 @@
 // iffy wrapper
 (function() {
 
+//const baseURL='http://rsnacrowdquant.cloudapp.net:5984';
 const baseURL='http://rsnacrowdquant2.eastus2.cloudapp.azure.com:5984';
 const measurementsURL = baseURL + '/measurements';
 const measurementsDB = new PouchDB(measurementsURL);
